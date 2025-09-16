@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/custom/base_screen.dart';
+import 'package:my_app/custom/button.dart';
 import 'package:my_app/data/sample_image.dart';
 import 'package:my_app/widgets/image_item.dart';
 import 'package:my_app/widgets/toggle_tab.dart';
 
-class HomeScreen extends StatefulWidget{
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.onThemeChanged});
 
   final void Function(ThemeMode) onThemeChanged;
@@ -17,9 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ThemeMode _currentMode = ThemeMode.system;
   final List<ImageItem> items = sampleImages;
   String? selectedId;
-  String? selectedDescription;
   final TextEditingController _descriptionController = TextEditingController();
-
 
   void _handleToggle() {
     setState(() {
@@ -40,11 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BaseScreen(
       scrollable: true,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       appBar: AppBar(
-        title: const Text('Demo'),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.close),
+        ),
         actions: [
           IconButton(
             onPressed: _handleToggle,
@@ -60,104 +67,210 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ToggleTabs(
-                width: width,
-              ),
+              ToggleTabs(width: width),
+              const SizedBox(height: 16),
               Text(
                 'What type of posters do you want to create?',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
                 textAlign: TextAlign.start,
               ),
+              const SizedBox(height: 16),
+
+              // Image selector
               SizedBox(
-              height: 180,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  final isSelected = selectedId == item.id;
-        
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedId = item.id;
-                        selectedDescription = item.description;
-                      });
-                    },
-                    child: AnimatedScale(
-                      scale: isSelected ? 1.1 : 1.0,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      child: AnimatedContainer(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    final isSelected = selectedId == item.id;
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedId = item.id;
+                        });
+                      },
+                      child: AnimatedScale(
+                        scale: isSelected ? 1.1 : 1.0,
                         duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.all(8),
-                        width: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                          image: DecorationImage(
-                            image: NetworkImage(item.imageUrl),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-        
-            // Description box
-            if (selectedId != null)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(12),
-                child: Stack(
-                  children: [
-                    TextField(
-                      controller: _descriptionController,
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        hintText: "Add description...",
-                        filled: true,
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.fromLTRB(48, 16, 16, 16),
-                      ),
-                    ),
-        
-                    // Image upload button (bottom-left)
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      child: IconButton(
-                        onPressed: () {
-                          // 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Upload image tapped"),
+                        curve: Curves.easeInOut,
+                        child: Container(
+                          width: 140,
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outline.withOpacity(0.1),
+                              width: 3,
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.image, size: 28),
-                        color: Theme.of(context).colorScheme.primary,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Stack(
+                              children: [
+                                // The image
+                                Positioned.fill(
+                                  child: Image.network(
+                                    item.imageUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+
+                                // Gradient + Text at bottom center
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.black.withOpacity(0.6),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Text(
+                                      item.name,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 30),
+              // Description box
+              if (selectedId != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: theme.colorScheme.surfaceVariant,
+                  ),
+                  child: Stack(
+                    children: [
+                      TextField(
+                        controller: _descriptionController,
+                        maxLines: 5,
+                        decoration: const InputDecoration(
+                          hintText: "Add description...",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: IconButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Upload image tapped"),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.image, size: 28),
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              SizedBox(height: 20),
+              Text(
+                'Settings',
+                style: theme.textTheme.bodyLarge!.copyWith(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                ),
+                textAlign: TextAlign.start,
+              ),
+              SizedBox(height: 20),
+              // Size & Category box
+              Container(
+                height: 120,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.surfaceVariant,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // First row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Size"),
+                        InkWell(
+                          onTap: () {},
+                          child: Row(
+                            children: const [
+                              Text("1080 X 1920 px"),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_ios, size: 16),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Divider(thickness: 0.5),
+
+                    // Second row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Category"),
+                        InkWell(
+                          onTap: () {},
+                          child: Row(
+                            children: const [
+                              Text("Foods and beverage"),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_ios, size: 16),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 50),
+
+              // Generate button
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: CustomButton(
+                  text: 'Generate',
+                  isAsset: false,
+                  imagePath:
+                      'https://cdn.pixabay.com/photo/2015/05/22/19/01/business-779542_640.jpg',
+                  onPressed: () {},
                 ),
               ),
             ],
