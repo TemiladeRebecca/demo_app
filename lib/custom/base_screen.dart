@@ -16,15 +16,12 @@ class BaseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: appBar,
       body: SafeArea(
         child: Padding(
           padding: padding,
-          child: scrollable
-              ? SingleChildScrollView(child: child)
-              : child,
+          child: scrollable ? SingleChildScrollView(child: child) : child,
         ),
       ),
     );
