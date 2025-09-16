@@ -22,11 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleToggle() {
     setState(() {
-      if (_currentMode == ThemeMode.light) {
-        _currentMode = ThemeMode.dark;
-      } else {
-        _currentMode = ThemeMode.light;
-      }
+      _currentMode =
+          _currentMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
       widget.onThemeChanged(_currentMode);
     });
   }
@@ -46,10 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        surfaceTintColor: Colors.transparent,
+        backgroundColor: theme.colorScheme.surface,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.close),
         ),
         actions: [
@@ -66,103 +63,59 @@ class _HomeScreenState extends State<HomeScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final bool isDesktop = width > 800;
+          final bool isTablet = width > 600 && width <= 800;
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ToggleTabs(width: width),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+
               Text(
                 'What type of posters do you want to create?',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.primary,
                 ),
-                textAlign: TextAlign.start,
               ),
               const SizedBox(height: 16),
 
-              // Image selector
-              SizedBox(
-                height: 180,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
+              // Responsive Image Gallery
+              if (isDesktop || isTablet)
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: isDesktop ? 4 : 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 3 / 4,
+                  ),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
                     final isSelected = selectedId == item.id;
 
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedId = item.id;
-                        });
-                      },
-                      child: AnimatedScale(
-                        scale: isSelected ? 1.1 : 1.0,
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                        child: Container(
-                          width: 140,
-                          margin: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.outline.withOpacity(0.1),
-                              width: 3,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Stack(
-                              children: [
-                                // The image
-                                Positioned.fill(
-                                  child: Image.network(
-                                    item.imageUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-
-                                // Gradient + Text at bottom center
-                                Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.transparent,
-                                          Colors.black.withOpacity(0.6),
-                                        ],
-                                      ),
-                                    ),
-                                    child: Text(
-                                      item.name,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
+                    return _buildImageCard(item, theme, isSelected);
                   },
+                )
+              else
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final isSelected = selectedId == item.id;
+
+                      return _buildImageCard(item, theme, isSelected);
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 30),
+
+              const SizedBox(height: 30),
+
               // Description box
               if (selectedId != null)
                 Container(
@@ -176,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       TextField(
                         controller: _descriptionController,
-                        maxLines: 5,
+                        maxLines: isDesktop ? 8 : 5,
                         decoration: const InputDecoration(
                           hintText: "Add description...",
                           border: InputBorder.none,
@@ -200,71 +153,72 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-              SizedBox(height: 20),
+
+              const SizedBox(height: 20),
+
               Text(
                 'Settings',
                 style: theme.textTheme.bodyLarge!.copyWith(
                   color: theme.colorScheme.primary.withOpacity(0.3),
                 ),
-                textAlign: TextAlign.start,
               ),
-              SizedBox(height: 20),
-              // Size & Category box
-              Container(
-                height: 120,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: theme.colorScheme.surfaceVariant,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // First row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Size"),
-                        InkWell(
-                          onTap: () {},
-                          child: Row(
-                            children: const [
-                              Text("1080 X 1920 px"),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_ios, size: 16),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+              const SizedBox(height: 20),
 
-                    const Divider(thickness: 0.5),
-
-                    // Second row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Category"),
-                        InkWell(
-                          onTap: () {},
-                          child: Row(
-                            children: const [
-                              Text("Foods and beverage"),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_ios, size: 16),
-                            ],
+              // Settings container (scales with screen width)
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isDesktop ? 500 : double.infinity),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: theme.colorScheme.surfaceVariant,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Size"),
+                          InkWell(
+                            onTap: () {},
+                            child: Row(
+                              children: const [
+                                Text("1080 X 1920 px"),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_ios, size: 16),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                      const Divider(thickness: 0.5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Category"),
+                          InkWell(
+                            onTap: () {},
+                            child: Row(
+                              children: const [
+                                Text("Foods and beverage"),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_ios, size: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
               const SizedBox(height: 50),
 
-              // Generate button
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+              // Generate button (centers on desktop)
+              Align(
+                alignment: isDesktop ? Alignment.center : Alignment.centerLeft,
                 child: CustomButton(
                   text: 'Generate',
                   isAsset: false,
@@ -276,6 +230,69 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildImageCard(ImageItem item, ThemeData theme, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        setState(() => selectedId = item.id);
+      },
+      child: AnimatedScale(
+        scale: isSelected ? 1.1 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        child: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline.withOpacity(0.1),
+              width: 3,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.network(
+                    item.imageUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.2),
+                          Colors.black.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                    child: Text(
+                      item.name,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
