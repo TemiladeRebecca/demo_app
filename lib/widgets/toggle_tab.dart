@@ -57,7 +57,7 @@ class _ToggleTabsState extends State<ToggleTabs> {
         SizedBox(height: 6),
         Stack(
           children: [
-            const Divider(thickness: 1, height: 10),
+            const Divider(thickness: 1, height: 8),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
