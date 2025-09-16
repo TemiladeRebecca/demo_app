@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_app/screens/home_screen.dart';
 
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -26,10 +31,19 @@ class _MyAppState extends State<MyApp> {
       // Light Theme
       theme: ThemeData(
         brightness: Brightness.light,
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.light,
+        textTheme: GoogleFonts.poppinsTextTheme(
+          const TextTheme(
+            bodyMedium: TextStyle(color: Colors.black), // default text
+          ),
+        ),
+        colorScheme: const ColorScheme.light(
+          primary: Colors.black,
+          onPrimary: Colors.white,
+          background: Colors.white,
+          onBackground: Colors.black,
+          surface: Colors.white,
+          onSurface: Colors.black,
+          surfaceVariant: Color(0xFFF5F5F5),
         ),
       ),
 
@@ -37,11 +51,18 @@ class _MyAppState extends State<MyApp> {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         textTheme: GoogleFonts.poppinsTextTheme(
-          ThemeData(brightness: Brightness.dark).textTheme,
+          const TextTheme(
+            bodyMedium: TextStyle(color: Colors.white), // default text
+          ),
         ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.dark,
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.white,
+          onPrimary: Colors.black,
+          background: Colors.black,
+          onBackground: Colors.white,
+          surface: Colors.black,
+          onSurface: Colors.white,
+          surfaceVariant: Color(0xFF1E1E1E),
         ),
       ),
 
